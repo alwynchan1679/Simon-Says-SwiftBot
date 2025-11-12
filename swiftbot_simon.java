@@ -36,7 +36,7 @@ public class swiftbot_simon {
 					score += 1;
 					System.out.println("Correct! Score: " + score);
 				} else {
-					if (score <= 5) {
+					if (score >= 5) {
 						GameOver();
 					} else {
 						System.out.println("Your Brain is a failure just like you.");
@@ -135,6 +135,8 @@ public class swiftbot_simon {
 		try {
 			// Moves the wheels with the set left wheel and right wheel velocity, for 3
 			// seconds.
+			swiftBot.move(10, 10, 3000);
+			swiftBot.move(35, 0, 5000);
 			swiftBot.move(10, 10, 3000);
 		} catch(Exception e) {
 			e.printStackTrace();
