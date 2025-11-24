@@ -58,6 +58,7 @@ public class swiftbot_simon {
 				// compare player's input to full sequence
 				do {
 					System.out.println("Playing next sequence...");
+					Thread.sleep(500);
 					// add a new random light to the sequence
 					String newColor = newSequence().get(0);
 					sequence.add(newColor);
@@ -122,7 +123,6 @@ public class swiftbot_simon {
 						}
 					}
 				} while (pLives > 0);
-				System.out.println("Lives: "+pLives);
 				if (pLives == 0) {
 					System.out.println("You lost all your lives! Game Over!");
 					System.exit(5);
@@ -373,11 +373,11 @@ public class swiftbot_simon {
 			
 			if (!done.get()) {
 			    System.out.println("Time's up!");
-			    pLives--;
+			    pLives -= 1;
+			    System.out.println("You have "+pLives+" lives left.");
 			    sequenceMatch = false;
 			    incorrectSequence();
 			    swiftBot.disableAllButtons();
-			    System.exit(5);
 			}
 		} catch (Exception e) {
 			System.out.println("ERROR occurred when setting up buttons.");
