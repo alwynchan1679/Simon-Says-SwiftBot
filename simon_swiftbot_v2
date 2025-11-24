@@ -1,0 +1,444 @@
+import swiftbot.*;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Scanner;
+
+//Self note: 
+//add new victory animation 
+//add levels 1,2,3,4 
+public class swiftbot_simon {
+	
+	static SwiftBotAPI swiftBot;
+
+	
+	static List<String> sequence = new ArrayList<>(); // stores growing sequence
+	
+	// Intialising the score count = 0
+	static int score = 0;
+	
+	//Intialising the player lives (3 lives)
+	static int pLives = 3;
+	
+	// Boolean to check sequence match
+	static boolean sequenceMatch;
+	
+	// De-bounce delay to prevent the buttons from being inputed multiple times
+	static long lastPressTime = 0;
+	static final long DEBOUNCE_DELAY = 350;
+	
+	// Declaring three variables containing the RGB values for red, green and blue.
+	static int[] red = new int[] { 255, 0, 0 }; // BACK_LEFT
+	static int[] blue = new int[] { 0, 0, 255 }; // BACK_RIGHT
+	static int[] green = new int[] { 0, 255, 0 }; // FRONT_LEFT
+	static int[] yellow = new int[] {255,255,0}; // FRONT_RIGHT
+	
+	static Underlight[] underlights = new Underlight[] {
+			Underlight.BACK_LEFT, 
+			Underlight.BACK_RIGHT,
+			Underlight.FRONT_LEFT, 
+			Underlight.FRONT_RIGHT
+		};
+	
+	public static void main(String[] args) throws InterruptedException {
+		System.out.println("Red = B");
+		System.out.println("Blue = Y");
+		System.out.println("Green = A");
+		System.out.println("Yellow = X");
+		System.out.println("You only have 10 seconds to enter the correct sequence");
+		System.out.println("You have 3 lives");
+
+		try {
+			swiftBot = SwiftBotAPI.INSTANCE;
+			
+			List<String> playerSequence = new ArrayList<>();
+			
+			while (true) {
+
+				// compare player's input to full sequence
+				do {
+					System.out.println("Playing next sequence...");
+					// add a new random light to the sequence
+					String newColor = newSequence().get(0);
+					sequence.add(newColor);
+					for (int i = 0; i < sequence.size(); i++) {
+						if (sequence.get(i).equals("red")) {
+							swiftBot.setUnderlight(Underlight.BACK_LEFT, red);
+							Thread.sleep(300);
+							swiftBot.disableUnderlights();
+							Thread.sleep(300);
+							
+						} else if (sequence.get(i).equals("blue")) {
+							swiftBot.setUnderlight(Underlight.BACK_RIGHT, blue);
+							Thread.sleep(300);
+							swiftBot.disableUnderlights();
+							Thread.sleep(300);
+							
+						} else if (sequence.get(i).equals("green")) {
+							swiftBot.setUnderlight(Underlight.FRONT_LEFT, green);
+							Thread.sleep(300);
+							swiftBot.disableUnderlights();
+							Thread.sleep(300);
+							
+						} else if (sequence.get(i).equals("yellow")) {
+							swiftBot.setUnderlight(Underlight.FRONT_RIGHT, yellow);
+							Thread.sleep(300);
+							swiftBot.disableUnderlights();
+							Thread.sleep(300);
+						}
+					}
+					System.out.println("");
+					System.out.println("Current Sequence: " + sequence);
+					// let player try to repeat the sequence
+					playerSequence = PlayerPlays(sequence.size());
+					if ((sequence.equals(playerSequence)) && (pLives > 0)) {
+						score += 1;
+						System.out.println("Correct! Score: " + score);
+						  for (int i = 0; i<=3; i++) {
+							    swiftBot.fillUnderlights(green);
+							    Thread.sleep(200);
+							    swiftBot.disableUnderlights();
+							    Thread.sleep(200);
+						    }
+					}
+					if ((sequenceMatch) && (score > 0) && (score % 5) == 0) {
+						try (Scanner decision = new Scanner(System.in)) {
+							System.out.println("Do you want to continue? (Y/N)");
+							String userDecision = decision.next();
+							
+							if (userDecision.equals("n")) {
+								GameOver(); 
+							} else if (userDecision.equals("y")) {
+								System.out.println("Resuming...");
+								for (int i = 1; i<=3; i++) {
+									System.out.println(i+"...");
+									Thread.sleep(1000);
+								}
+								continue;
+							} else {
+								System.out.println("Invalid Input");
+								System.exit(5);
+							}
+						}
+					}
+				} while (pLives > 0);
+				System.out.println("Lives: "+pLives);
+				if (pLives == 0) {
+					System.out.println("You lost all your lives! Game Over!");
+					System.exit(5);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("\nI2C disabled!");
+			System.exit(5);
+		}
+	}
+
+	//We will be using testIndividualUnderlights() and testing buttons from DoesMySwiftBotWork
+	//red=Underlight.BACK_LEFT=B blue=Underlight.BACK_RIGHT=Y
+	//green=Underlight.FRONT_LEFT=A yellow=Underlight.FRONT_RIGHT=X
+	public static List<String> newSequence() throws InterruptedException {
+	
+		List<String> colorHistory = new ArrayList<>();
+		try {
+			Underlight[] underlights = new Underlight[] {Underlight.BACK_LEFT, Underlight.BACK_RIGHT,Underlight.FRONT_LEFT, Underlight.FRONT_RIGHT};
+			Underlight randomLight = underlights[ThreadLocalRandom.current().nextInt(underlights.length)];
+			//System.out.println("Random Underlight: " + randomLight);
+
+			if (randomLight == Underlight.BACK_LEFT) {
+				colorHistory.add("red");
+				//B
+				
+			} else if (randomLight == Underlight.BACK_RIGHT) {
+				colorHistory.add("blue");
+				//Y
+				
+			} else if (randomLight == Underlight.FRONT_LEFT) {
+				colorHistory.add("green");
+				//A
+				
+			} else if (randomLight == Underlight.FRONT_RIGHT) {
+				colorHistory.add("yellow");
+				//X
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("ERROR: Unable to set under light");
+			System.exit(5);
+		}
+		return colorHistory;
+	}
+
+	//Function to flash lights when player gets the sequence wrong
+	public static void incorrectSequence() {
+		try {
+			for (int i = 0; i<=3; i++) {
+			    swiftBot.fillUnderlights(red);
+			    Thread.sleep(200);
+			    swiftBot.disableUnderlights();
+			    Thread.sleep(200);
+		    }
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	//In order to make it like player plays using pressing button in the swiftbot we will use testButton from DoesMySwiftBotWork.java
+	public static List<String> PlayerPlays(int requiredPresses) throws InterruptedException {
+		
+		swiftBot.disableAllButtons();
+	
+		AtomicBoolean done = new AtomicBoolean(false);
+
+		long endTime = System.currentTimeMillis() + 10000;
+		
+		List<String> colorHistory_2 = new ArrayList<>();
+		try {
+			sequenceMatch = false;
+			swiftBot.enableButton(Button.A, () -> {
+				
+				long now = System.currentTimeMillis();
+			    if (now - lastPressTime < DEBOUNCE_DELAY) {
+			        return;
+			    }
+			    lastPressTime = now;
+				
+				try {
+					swiftBot.setUnderlight(Underlight.FRONT_LEFT, green);
+					Thread.sleep(200);
+					
+					if (colorHistory_2.size() < requiredPresses) {
+						colorHistory_2.add("green"); //green
+						sequenceMatch = true;
+					    
+						if (!colorHistory_2.get(colorHistory_2.size() - 1).equals(sequence.get(colorHistory_2.size() - 1))) {
+						    swiftBot.disableAllButtons();
+						    System.out.println("Wrong input!");
+						    pLives -= 1;
+							sequenceMatch = false;
+						    System.out.println("You have "+pLives+" lives left.");
+						    swiftBot.disableUnderlights();
+						    incorrectSequence();
+						    done.set(true);
+						    return;
+						}
+
+					}
+					
+					if (colorHistory_2.size() == requiredPresses) {
+				        sequenceMatch = true;      // they entered enough presses
+				        done.set(true);             // stop the timer/waiting loop
+				        swiftBot.disableAllButtons();
+				    }
+					
+					swiftBot.disableUnderlights();
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			});
+
+			swiftBot.enableButton(Button.B, () -> {
+
+				long now = System.currentTimeMillis();
+			    if (now - lastPressTime < DEBOUNCE_DELAY) {
+			        return;
+			    }
+			    lastPressTime = now;
+				
+				try {
+					swiftBot.setUnderlight(Underlight.BACK_LEFT, red);
+					Thread.sleep(200);
+					
+					if (colorHistory_2.size() < requiredPresses) {
+						colorHistory_2.add("red"); //red
+						sequenceMatch = true;
+					    
+						if (!colorHistory_2.get(colorHistory_2.size() - 1).equals(sequence.get(colorHistory_2.size() - 1))) {
+						    swiftBot.disableAllButtons();
+						    System.out.println("Wrong input!");
+						    pLives -= 1;
+							sequenceMatch = false;
+						    System.out.println("You have "+pLives+" lives left.");
+						    swiftBot.disableUnderlights();
+						    incorrectSequence();
+						    done.set(true);
+						    return;
+						}
+
+					}
+					
+					if (colorHistory_2.size() == requiredPresses) {
+				        sequenceMatch = true;      // they entered enough presses
+				        done.set(true);             // stop the timer/waiting loop
+				        swiftBot.disableAllButtons();
+				    }
+					
+					swiftBot.disableUnderlights();
+
+				} catch (InterruptedException e ) {
+					e.printStackTrace(); 
+				}
+			});
+
+			swiftBot.enableButton(Button.X, () -> {
+				
+				long now = System.currentTimeMillis();
+			    if (now - lastPressTime < DEBOUNCE_DELAY) {
+			        return;
+			    }
+			    lastPressTime = now;
+				
+				try {
+					swiftBot.setUnderlight(Underlight.FRONT_RIGHT, yellow);
+					Thread.sleep(200);
+					
+					if (colorHistory_2.size() < requiredPresses) {
+						colorHistory_2.add("yellow"); //yellow
+						sequenceMatch = true;
+					    
+						if (!colorHistory_2.get(colorHistory_2.size() - 1).equals(sequence.get(colorHistory_2.size() - 1))) {
+						    swiftBot.disableAllButtons();
+						    System.out.println("Wrong input!");
+						    pLives -= 1;
+							sequenceMatch = false;
+						    System.out.println("You have "+pLives+" lives left.");
+						    swiftBot.disableUnderlights();
+						    incorrectSequence();
+						    done.set(true);
+						    return;
+						}
+
+					}
+					
+					if (colorHistory_2.size() == requiredPresses) {
+				        sequenceMatch = true;      // they entered enough presses
+				        done.set(true);             // stop the timer/waiting loop
+				        swiftBot.disableAllButtons();
+				    }
+					
+					swiftBot.disableUnderlights();
+
+				} catch (InterruptedException e ) {
+					e.printStackTrace(); 
+				}
+			});
+
+			swiftBot.enableButton(Button.Y, () -> {
+				
+				long now = System.currentTimeMillis();
+			    if (now - lastPressTime < DEBOUNCE_DELAY) {
+			        return;
+			    }
+			    lastPressTime = now;
+				
+				try {
+					swiftBot.setUnderlight(Underlight.BACK_RIGHT, blue);
+					Thread.sleep(200);
+					
+					if (colorHistory_2.size() < requiredPresses) {
+						colorHistory_2.add("blue"); //blue
+						sequenceMatch = true;
+					    
+						if (!colorHistory_2.get(colorHistory_2.size() - 1).equals(sequence.get(colorHistory_2.size() - 1))) {
+						    swiftBot.disableAllButtons();
+						    System.out.println("Wrong input!");
+						    pLives -= 1;
+							sequenceMatch = false;
+						    System.out.println("You have "+pLives+" lives left.");
+						    swiftBot.disableUnderlights();
+						    incorrectSequence();
+						    done.set(true);
+						    return;
+						}
+					}
+					
+					if (colorHistory_2.size() == requiredPresses) {
+				        sequenceMatch = true;      // they entered enough presses
+				        done.set(true);             // stop the timer/waiting loop
+				        swiftBot.disableAllButtons();
+				    }
+					
+					swiftBot.disableUnderlights();
+
+				} catch (InterruptedException e ) {
+					e.printStackTrace(); 
+				}
+			});
+
+			while (!done.get() && System.currentTimeMillis() < endTime) {
+			    Thread.sleep(50);
+			}
+			
+			if (!done.get()) {
+			    System.out.println("Time's up!");
+			    pLives--;
+			    sequenceMatch = false;
+			    incorrectSequence();
+			    swiftBot.disableAllButtons();
+			    System.exit(5);
+			}
+		} catch (Exception e) {
+			System.out.println("ERROR occurred when setting up buttons.");
+			e.printStackTrace();
+			System.exit(5);
+		}
+		return colorHistory_2;
+	}
+
+	//SwiftBot should move in a v-shape (45 degrees) and use testIndividualUnderlights() 2 get all show random lights
+	public static void GameOver() throws InterruptedException {
+		System.out.println("You won! Total score: "+score);
+		
+		try {
+			// Moves the wheels with the set left wheel and right wheel velocity, for 3
+			// seconds.
+			swiftBot.move(10, 10, 3000);
+			swiftBot.move(35, 0, 5000);
+			swiftBot.move(10, 10, 3000);
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("ERROR: Error while testing wheel");
+			System.exit(5);
+		}
+		int[] red = new int[] { 255, 0, 0 };
+		int[] blue = new int[] { 0, 0, 255 };
+		int[] green = new int[] { 0, 255, 0 };
+		int[] yellow = new int[] {255,255,0};
+		try {
+			
+			List<Underlight> underlightList = Arrays.asList(underlights);
+			Collections.shuffle(underlightList);
+
+			// Iterate over all in random order
+			for (Underlight u : underlightList) {
+				if (u == Underlight.BACK_LEFT) {
+					swiftBot.setUnderlight(Underlight.BACK_LEFT, red);
+					Thread.sleep(200);
+					//B
+				} else if (u == Underlight.BACK_RIGHT) {
+					swiftBot.setUnderlight(Underlight.BACK_RIGHT, blue);
+					Thread.sleep(200);
+					//Y
+				} else if (u == Underlight.FRONT_LEFT) {
+					swiftBot.setUnderlight(Underlight.FRONT_LEFT, green);
+					Thread.sleep(200);
+					//A
+				} else if (u == Underlight.FRONT_RIGHT) {
+					swiftBot.setUnderlight(Underlight.FRONT_RIGHT, yellow);
+					Thread.sleep(200);
+					//X
+				}
+			}
+			
+			swiftBot.disableUnderlights();
+			Thread.sleep(500);
+			System.exit(5);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("ERROR: Error while testing wheel");
+			System.exit(5);
+		}
+	}
+}
