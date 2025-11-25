@@ -57,36 +57,13 @@ public class swiftbot_simon {
 
 				// compare player's input to full sequence
 				do {
-					System.out.println("Playing next sequence...");
-					Thread.sleep(500);
-					// add a new random light to the sequence
-					String newColor = newSequence().get(0);
-					sequence.add(newColor);
-					for (int i = 0; i < sequence.size(); i++) {
-						if (sequence.get(i).equals("red")) {
-							swiftBot.setUnderlight(Underlight.BACK_LEFT, red);
-							Thread.sleep(300);
-							swiftBot.disableUnderlights();
-							Thread.sleep(300);
-							
-						} else if (sequence.get(i).equals("blue")) {
-							swiftBot.setUnderlight(Underlight.BACK_RIGHT, blue);
-							Thread.sleep(300);
-							swiftBot.disableUnderlights();
-							Thread.sleep(300);
-							
-						} else if (sequence.get(i).equals("green")) {
-							swiftBot.setUnderlight(Underlight.FRONT_LEFT, green);
-							Thread.sleep(300);
-							swiftBot.disableUnderlights();
-							Thread.sleep(300);
-							
-						} else if (sequence.get(i).equals("yellow")) {
-							swiftBot.setUnderlight(Underlight.FRONT_RIGHT, yellow);
-							Thread.sleep(300);
-							swiftBot.disableUnderlights();
-							Thread.sleep(300);
-						}
+					if (sequenceMatch) {
+						System.out.println("Playing next sequence...");
+						Thread.sleep(500);
+						// add a new random light to the sequence
+						String newColor = newSequence().get(0);
+						sequence.add(newColor);
+						currentSequence();
 					}
 					System.out.println("");
 					System.out.println("Current Sequence: " + sequence);
@@ -134,6 +111,39 @@ public class swiftbot_simon {
 		}
 	}
 
+	
+	public static void currentSequence() throws InterruptedException {
+		try {
+			for (int i = 0; i < sequence.size(); i++) {
+				if (sequence.get(i).equals("red")) {
+					swiftBot.setUnderlight(Underlight.BACK_LEFT, red);
+					Thread.sleep(300);
+					swiftBot.disableUnderlights();
+					Thread.sleep(300);
+					
+				} else if (sequence.get(i).equals("blue")) {
+					swiftBot.setUnderlight(Underlight.BACK_RIGHT, blue);
+					Thread.sleep(300);
+					swiftBot.disableUnderlights();
+					Thread.sleep(300);
+					
+				} else if (sequence.get(i).equals("green")) {
+					swiftBot.setUnderlight(Underlight.FRONT_LEFT, green);
+					Thread.sleep(300);
+					swiftBot.disableUnderlights();
+					Thread.sleep(300);
+					
+				} else if (sequence.get(i).equals("yellow")) {
+					swiftBot.setUnderlight(Underlight.FRONT_RIGHT, yellow);
+					Thread.sleep(300);
+					swiftBot.disableUnderlights();
+					Thread.sleep(300);
+				}
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 	//We will be using testIndividualUnderlights() and testing buttons from DoesMySwiftBotWork
 	//red=Underlight.BACK_LEFT=B blue=Underlight.BACK_RIGHT=Y
 	//green=Underlight.FRONT_LEFT=A yellow=Underlight.FRONT_RIGHT=X
@@ -216,6 +226,10 @@ public class swiftbot_simon {
 						    swiftBot.disableAllButtons();
 						    System.out.println("Wrong input!");
 						    pLives -= 1;
+						    
+						    System.out.println("Replaying previous sequence...");
+						    currentSequence();
+						    
 							sequenceMatch = false;
 						    System.out.println("You have "+pLives+" lives left.");
 						    swiftBot.disableUnderlights();
@@ -259,6 +273,10 @@ public class swiftbot_simon {
 						    swiftBot.disableAllButtons();
 						    System.out.println("Wrong input!");
 						    pLives -= 1;
+						    
+						    System.out.println("Replaying previous sequence...");
+						    currentSequence();
+						    
 							sequenceMatch = false;
 						    System.out.println("You have "+pLives+" lives left.");
 						    swiftBot.disableUnderlights();
@@ -302,6 +320,10 @@ public class swiftbot_simon {
 						    swiftBot.disableAllButtons();
 						    System.out.println("Wrong input!");
 						    pLives -= 1;
+						    
+						    System.out.println("Replaying previous sequence...");
+						    currentSequence();
+						    
 							sequenceMatch = false;
 						    System.out.println("You have "+pLives+" lives left.");
 						    swiftBot.disableUnderlights();
@@ -345,6 +367,10 @@ public class swiftbot_simon {
 						    swiftBot.disableAllButtons();
 						    System.out.println("Wrong input!");
 						    pLives -= 1;
+						    
+						    System.out.println("Replaying previous sequence...");
+						    currentSequence();
+						    
 							sequenceMatch = false;
 						    System.out.println("You have "+pLives+" lives left.");
 						    swiftBot.disableUnderlights();
@@ -394,9 +420,9 @@ public class swiftbot_simon {
 		try {
 			// Moves the wheels with the set left wheel and right wheel velocity, for 3
 			// seconds.
-			swiftBot.move(10, 10, 3000);
-			swiftBot.move(35, 0, 5000);
-			swiftBot.move(10, 10, 3000);
+			swiftBot.move(30, 10, 1000);
+			swiftBot.move(35, 0, 2500);
+			swiftBot.move(30, 10, 1000);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.out.println("ERROR: Error while testing wheel");
