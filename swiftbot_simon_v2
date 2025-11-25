@@ -25,7 +25,7 @@ public class swiftbot_simon {
 	
 	// De-bounce delay to prevent the buttons from being inputed multiple times
 	static long lastPressTime = 0;
-	static final long DEBOUNCE_DELAY = 350;
+	static final long DEBOUNCE_DELAY = 250;
 	
 	// Declaring three variables containing the RGB values for red, green and blue.
 	static int[] red = new int[] { 255, 0, 0 }; // BACK_LEFT
@@ -431,6 +431,7 @@ public class swiftbot_simon {
 					//X
 				}
 			}
+			
 			
 			swiftBot.disableUnderlights();
 			Thread.sleep(500);
