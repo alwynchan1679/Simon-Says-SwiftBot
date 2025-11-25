@@ -420,9 +420,15 @@ public class swiftbot_simon {
 		try {
 			// Moves the wheels with the set left wheel and right wheel velocity, for 3
 			// seconds.
-			swiftBot.move(30, 30, 1000);
-			swiftBot.move(50, -50, 5000);
-			swiftBot.move(30, 30, 1000);
+			if (score < 5) {
+				swiftBot.move(40, 40, 1000);
+				swiftBot.move(50, -50, 5000);
+				swiftBot.move(40, 40, 1000);
+			} else if (score >= 10) {
+				swiftBot.move(100, 100, 300);
+				swiftBot.move(50, -50, 5000);
+				swiftBot.move(100, 100, 300);
+			}
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.out.println("ERROR: Error while testing wheel");
