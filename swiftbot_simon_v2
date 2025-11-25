@@ -21,7 +21,7 @@ public class swiftbot_simon {
 	static int pLives = 3;
 	
 	// Boolean to check sequence match
-	static boolean sequenceMatch;
+	static boolean sequenceMatch = true;
 	
 	// De-bounce delay to prevent the buttons from being inputed multiple times
 	static long lastPressTime = 0;
@@ -420,9 +420,9 @@ public class swiftbot_simon {
 		try {
 			// Moves the wheels with the set left wheel and right wheel velocity, for 3
 			// seconds.
-			swiftBot.move(30, 10, 1000);
-			swiftBot.move(35, 0, 2500);
-			swiftBot.move(30, 10, 1000);
+			swiftBot.move(30, 30, 1000);
+			swiftBot.move(50, -50, 5000);
+			swiftBot.move(30, 30, 1000);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.out.println("ERROR: Error while testing wheel");
