@@ -4,18 +4,15 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Scanner;
 
-//Self note: 
-//add new victory animation 
-//add levels 1,2,3,4 
 public class swiftbot_simon {
 	
 	static SwiftBotAPI swiftBot;
 
-	
 	static List<String> sequence = new ArrayList<>(); // stores growing sequence
 	
-	// Intialising the score count = 0
+	// Intialising the score and rounds count = 0
 	static int score = 0;
+	static int roundNum = 0;
 	
 	//Intialising the player lives (3 lives)
 	static int pLives = 3;
@@ -47,7 +44,28 @@ public class swiftbot_simon {
 		System.out.println("Yellow = X");
 		System.out.println("You only have 10 seconds to enter the correct sequence");
 		System.out.println("You have 3 lives");
-
+		
+		System.out.println("Would you like to start the game? (yes/no)");
+		boolean validInput;
+		do {
+			try (Scanner startGame = new Scanner(System.in)) {
+				validInput = true;
+				System.out.println("Do you want to continue? (yes/no)");
+				String startDecision = startGame.next();
+				startDecision = startDecision.toLowerCase();
+				
+				if (startDecision.equals("no")) {
+					System.out.println("Exiting program...");
+					System.exit(5);
+				} else if (!startDecision.equals("yes")) {
+					System.out.println("Invalid input, please re-enter a valid input");
+					validInput = false;
+				}
+				
+			} 
+			
+		} while (!validInput);
+			
 		try {
 			swiftBot = SwiftBotAPI.INSTANCE;
 			
@@ -55,7 +73,7 @@ public class swiftbot_simon {
 			
 			while (true) {
 
-				// compare player's input to full sequence
+				
 				do {
 					if (sequenceMatch) {
 						System.out.println("Playing next sequence...");
@@ -65,9 +83,12 @@ public class swiftbot_simon {
 						sequence.add(newColor);
 						currentSequence();
 					}
+					
 					System.out.println("");
 					System.out.println("Current Sequence: " + sequence);
 					// let player try to repeat the sequence
+					roundNum += 1;
+					System.out.println("Round: "+(roundNum));
 					playerSequence = PlayerPlays(sequence.size());
 					if ((sequence.equals(playerSequence)) && (pLives > 0)) {
 						score += 1;
@@ -80,24 +101,30 @@ public class swiftbot_simon {
 						    }
 					}
 					if ((sequenceMatch) && (score > 0) && (score % 5) == 0) {
-						try (Scanner decision = new Scanner(System.in)) {
-							System.out.println("Do you want to continue? (Y/N)");
-							String userDecision = decision.next();
-							
-							if (userDecision.equals("n")) {
-								GameOver(); 
-							} else if (userDecision.equals("y")) {
-								System.out.println("Resuming...");
-								for (int i = 1; i<=3; i++) {
-									System.out.println(i+"...");
-									Thread.sleep(1000);
+						boolean validDecision;
+						
+						do {
+							try (Scanner decision = new Scanner(System.in)) {
+								validDecision = true;
+								System.out.println("Do you want to continue? (yes/no)");
+								String userDecision = decision.next();
+								userDecision = userDecision.toLowerCase();
+								
+								if (userDecision.equals("no")) {
+									GameOver(); 
+								} else if (userDecision.equals("yes")) {
+									System.out.println("Resuming...");
+									for (int i = 1; i<=3; i++) {
+										System.out.println(i+"...");
+										Thread.sleep(1000);
+									}
+									continue;
+								} else {
+									System.out.println("Invalid input, please re-enter a valid input");
+									validDecision = false;
 								}
-								continue;
-							} else {
-								System.out.println("Invalid Input");
-								System.exit(5);
 							}
-						}
+						} while (!validDecision);
 					}
 				} while (pLives > 0);
 				if (pLives == 0) {
@@ -415,11 +442,11 @@ public class swiftbot_simon {
 
 	//SwiftBot should move in a v-shape (45 degrees) and use testIndividualUnderlights() 2 get all show random lights
 	public static void GameOver() throws InterruptedException {
-		System.out.println("You won! Total score: "+score);
+		System.out.println("See you again champ! Total score: "+score);
 		
 		try {
-			// Moves the wheels with the set left wheel and right wheel velocity, for 3
-			// seconds.
+			int botSpeed = score*10;
+			int botDistance = Math.round(30/(botSpeed/1000));
 			if (score < 5) {
 				swiftBot.move(40, 40, 1000);
 				swiftBot.move(50, -50, 5000);
@@ -428,6 +455,10 @@ public class swiftbot_simon {
 				swiftBot.move(100, 100, 300);
 				swiftBot.move(50, -50, 5000);
 				swiftBot.move(100, 100, 300);
+			} else {
+				swiftBot.move(botSpeed, botSpeed, botDistance);
+				swiftBot.move(50, -50, 5000);
+				swiftBot.move(botSpeed, botSpeed, botDistance);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
